@@ -1,6 +1,5 @@
 package learn.data;
 
-import learn.models.Guest;
 import learn.models.Host;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,6 +45,18 @@ class HostFileRepositoryTest {
     @Test
     void shouldNotFindNonExistingEmail() {
         Host actual = repository.findByEmail("thisisafakeemailforsure@fakie.com");
+        assertNull(actual);
+    }
+
+    @Test
+    void shouldFindById() {
+        Host actual = repository.findById("f92aa2ac-5370-4c61-87e3-3f18a81ce2e6");
+        assertNotNull(actual);
+    }
+
+    @Test
+    void shouldNotFindMissingId() {
+        Host actual = repository.findById("f92ace2e6");
         assertNull(actual);
     }
 

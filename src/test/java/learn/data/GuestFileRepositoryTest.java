@@ -50,6 +50,18 @@ class GuestFileRepositoryTest {
     }
 
     @Test
+    void shouldFindById() {
+        Guest actual = repository.findById(20);
+        assertNotNull(actual);
+    }
+
+    @Test
+    void shouldNotFindMissingId() {
+        Guest actual = repository.findById(10000);
+        assertNull(actual);
+    }
+
+    @Test
     void shouldAdd() throws DataException {
         Guest guest = new Guest();
         repository.add(guest);

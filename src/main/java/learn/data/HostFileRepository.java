@@ -14,7 +14,9 @@ public class HostFileRepository implements HostRepository {
     private final String DELIMITER = ",";
     private final String filePath;
 
-    public HostFileRepository(String filePath) {this.filePath = filePath;}
+    public HostFileRepository(String filePath) {
+        this.filePath = filePath;
+    }
 
     @Override
     public List<Host> findAll() {
@@ -25,7 +27,7 @@ public class HostFileRepository implements HostRepository {
 
             for (String line = reader.readLine(); line != null; line = reader.readLine()) {
 
-                String[] fields = line.split(DELIMITER,-1);
+                String[] fields = line.split(DELIMITER, -1);
                 if (fields.length == 10) {
                     result.add(deserialize(fields));
                 }
@@ -41,6 +43,17 @@ public class HostFileRepository implements HostRepository {
         List<Host> all = findAll();
         for (Host h : all) {
             if (h.getEmail().equals(email)) {
+                return h;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Host findById(String id) {
+        List<Host> all = findAll();
+            for(Host h :all) {
+            if (h.getId().equals(id)) {
                 return h;
             }
         }

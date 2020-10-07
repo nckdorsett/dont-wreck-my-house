@@ -10,6 +10,8 @@ public interface HostRepository {
 
     Host findByEmail(String email);
 
+    Host findById(String id);
+
     Host add(Host host) throws DataException;
 
     boolean update(Host host) throws DataException;

@@ -48,6 +48,17 @@ public class GuestFileRepository implements GuestRepository{
     }
 
     @Override
+    public Guest findById(int id) {
+        List<Guest> all = findAll();
+        for (Guest g : all) {
+            if (g.getId() == id) {
+                return g;
+            }
+        }
+        return null;
+    }
+
+    @Override
     public Guest add(Guest guest) throws DataException {
         if (guest == null) {
             return null;
@@ -80,7 +91,6 @@ public class GuestFileRepository implements GuestRepository{
 
     @Override
     public boolean delete(Guest guest) throws DataException {
-
         if (guest == null) {
             return false;
         }

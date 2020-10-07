@@ -4,7 +4,8 @@ import learn.data.DataException;
 import learn.data.GuestRepository;
 import learn.models.Guest;
 
-import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class GuestService {
 
@@ -27,6 +28,31 @@ public class GuestService {
         return result;
     }
 
+    public Result<Guest> update(Guest guest) throws DataException {
+        Result<Guest> result = validation(guest);
+        if (!result.isSuccess()) {
+            return result;
+        }
+
+        boolean success = repository.update(guest);
+        if (success) {
+            result.setPayload(guest);
+        } else {
+            result.addErrorMessage("Guest does not exist to be updated");
+        }
+        return result;
+    }
+
+    public Result<Guest> delete(Guest guest) throws DataException {
+        Result<Guest> result = new Result<>();
+        boolean success = repository.delete(guest);
+        if (success) {
+            result.setPayload(guest);
+        } else {
+            result.addErrorMessage("Guest did not exist to be removed");
+        }
+        return result;
+    }
 
     private Result<Guest> validation(Guest guest) {
         Result<Guest> result = new Result<>();
@@ -36,54 +62,39 @@ public class GuestService {
             return result;
         }
 
-        if (guest.getFirstName() == null || guest.getFirstName().isBlank()) {
+        if (!isNotNullOrEmpty(guest.getFirstName())) {
             result.addErrorMessage("First name cannot be empty");
-        } else if (isNumericValidation(guest.getFirstName())) {
-            result.addErrorMessage("First name cannot be a number");
+        } else if (!containsOnlyCharacters(guest.getFirstName())) {
+            result.addErrorMessage("Invalid first name");
         }
 
-        if (guest.getLastName() == null || guest.getLastName().isBlank()) {
+        if (!isNotNullOrEmpty(guest.getLastName())) {
             result.addErrorMessage("Last name cannot be empty");
-        } else if (isNumericValidation(guest.getLastName())) {
-            result.addErrorMessage("Last name cannot be a number");
+        } else if (!containsOnlyCharacters(guest.getLastName())) {
+            result.addErrorMessage("Invalid last name");
         }
 
-        if (guest.getEmail() == null || guest.getEmail().isBlank()) {
-            result.addErrorMessage("Email cannot be empty");
-        } else if (isNumericValidation(guest.getEmail())) {
-            result.addErrorMessage("Email cannot be a number");
+        if (!isEmailAddress(guest.getEmail())) {
+            result.addErrorMessage("Invalid email address");
         }
 
-        if (guest.getPhoneNumber() == null || guest.getPhoneNumber().isBlank()) {
-            result.addErrorMessage("Phone number cannot be empty");
+        if (!isPhoneNumber(guest.getPhoneNumber())) {
+            result.addErrorMessage("Invalid phone number");
         }
 
-        if (guest.getState() == null || guest.getState().isBlank()) {
+        if (!isNotNullOrEmpty(guest.getState())) {
             result.addErrorMessage("State cannot be empty");
-        } else if (isNumericValidation(guest.getState())) {
-            result.addErrorMessage("State cannot be a number");
         } else if (!isAState(guest.getState())) {
-            result.addErrorMessage("State cannot be a number");
+            result.addErrorMessage("Invalid State");
         }
 
-        if (repository.findAll().stream()
-        .anyMatch(g -> g.getEmail().equals(guest.getEmail()))) {
+        if (findByEmail(guest.getEmail()) != null) {
             result.addErrorMessage("Guest is a duplicate");
         }
         return result;
     }
 
-    private boolean isNumericValidation(String name) {
-        try {
-            Double.parseDouble(name);
-        } catch (NumberFormatException ex) {
-            return false;
-        }
-        return true;
-    }
-
     private boolean isAState(String state) {
-
         switch (state) {
             case "AL":
             case "AK":
@@ -139,6 +150,37 @@ public class GuestService {
                 return true;
         }
         return false;
+    }
+
+    private boolean isNotNullOrEmpty(String name) {
+        if (name == null || name.isBlank()) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isPhoneNumber(String phone) {
+        if (phone == null) {
+            return false;
+        }
+        String phoneRegex = "^\\(\\d{3}\\)\\s\\d{7}$";
+        Pattern phonePattern = Pattern.compile(phoneRegex, Pattern.CASE_INSENSITIVE);
+        Matcher matcher = phonePattern.matcher(phone);
+        return matcher.find();
+    }
+
+    private boolean isEmailAddress(String email) {
+        if (email == null) {
+            return false;
+        }
+        String emailRegex = "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$";
+        Pattern emailPattern = Pattern.compile(emailRegex, Pattern.CASE_INSENSITIVE);
+        Matcher matcher = emailPattern.matcher(email);
+        return matcher.find();
+    }
+
+    public boolean containsOnlyCharacters(String input) {
+        return Pattern.matches("[a-zA-Z']+", input);
     }
 
 }

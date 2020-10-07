@@ -10,6 +10,8 @@ public interface GuestRepository {
 
     Guest findByEmail(String email);
 
+    Guest findById(int id);
+
     Guest add(Guest guest) throws DataException;
 
     boolean update(Guest guest) throws DataException;
