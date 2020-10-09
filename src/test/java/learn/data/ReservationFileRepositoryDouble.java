@@ -4,7 +4,6 @@ import learn.models.Guest;
 import learn.models.Host;
 import learn.models.Reservation;
 
-import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -17,7 +16,7 @@ public class ReservationFileRepositoryDouble implements ReservationRepository {
     private final Host HOST = new Host("AAA-BBB-CCC-DDD",
             "Dorsett","ndfakie@email.com",
             "(111) 1234567","fake address",
-            "Milwaukee","WI",53212, new BigDecimal(477), new BigDecimal(596.25));
+            "Milwaukee","WI","53212", new BigDecimal(477), new BigDecimal(596.25));
     private final Guest GUEST = new Guest(1,"Nick",
             "Danger", "testemail@email.com",
             "(111) 1112233", "WI");
@@ -40,6 +39,15 @@ public class ReservationFileRepositoryDouble implements ReservationRepository {
         reservation2.setHost(HOST);
         reservation2.setTotal(reservation2.calcTotal());
         reservations.add(reservation2);
+
+        Reservation reservation3 = new Reservation();
+        reservation3.setId(3);
+        reservation3.setStartDate(LocalDate.of(1995, 1, 13));
+        reservation3.setEndDate(LocalDate.of(1995,1,15));
+        reservation3.setGuest(GUEST);
+        reservation3.setHost(HOST);
+        reservation3.setTotal(reservation3.calcTotal());
+        reservations.add(reservation3);
     }
 
 
@@ -63,6 +71,17 @@ public class ReservationFileRepositoryDouble implements ReservationRepository {
 
     @Override
     public boolean delete(Reservation reservation) throws DataException {
-        return true;
+        if (reservation == null) {
+            return false;
+        }
+
+        List<Reservation> all = findByHost(reservation.getHost());
+        for (int index = 0; index < all.size(); index++) {
+            if (reservation.getId() == all.get(index).getId()) {
+                all.remove(index);
+                return true;
+            }
+        }
+        return false;
     }
 }

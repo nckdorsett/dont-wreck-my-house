@@ -28,7 +28,7 @@ class ReservationFileRepositoryTest {
     final Host host = new Host("AAA-BBB-CCC-DDD",
             "Danger","ndlearner@learncoding.com",
             "(111) 1112233","1 Winner Lane",
-            "Milwaukee","WI",53212,
+            "Milwaukee","WI","53212",
             new BigDecimal("200"), new BigDecimal("300"));
 
     ReservationRepository repository = new ReservationFileRepository(TEST_DIR_PATH);
@@ -141,7 +141,7 @@ class ReservationFileRepositoryTest {
         Host host1 = new Host("123-456-789-0",
                 "Dooser","ndlearner@learncoding.com",
                 "(111) 1112233","1 Winner Lane",
-                "Milwaukee","WI",53212,
+                "Milwaukee","WI","53212",
                 new BigDecimal("200"), new BigDecimal("300"));
 
         Guest guest = new Guest();

@@ -44,8 +44,34 @@ public class ReservationService {
         return result;
     }
 
+    public Result<Reservation> update(Reservation reservation) throws DataException {
+        Result<Reservation> result = validate(reservation);
+        if (!result.isSuccess()) {
+            return result;
+        }
+        boolean success = reservationRepository.update(reservation);
+        if (success) {
+            result.setPayload(reservation);
+        } else {
+            result.addErrorMessage("That reservation does not exist to be updated");
+        }
+        return result;
+    }
 
-
+    public Result<Reservation> delete(Reservation reservation) throws DataException {
+        Result<Reservation> result = new Result<>();
+        if (reservation.getStartDate().isBefore(LocalDate.now())) {
+            result.addErrorMessage("Cannot cancel a reservation that's in the past");
+            return result;
+        }
+        boolean success = reservationRepository.delete(reservation);
+        if (success) {
+            result.setPayload(reservation);
+        } else {
+            result.addErrorMessage("That reservation does not exist to be canceled");
+        }
+        return result;
+    }
 
     private Result<Reservation> validate(Reservation reservation) {
         Result<Reservation> result = new Result<>();
@@ -80,7 +106,16 @@ public class ReservationService {
             result.addErrorMessage("Total is empty");
         }
 
-        dateAvailability(reservation, result);
+        if (reservation.getId() == 0) {
+            if (!dateAvailabilityAdd(reservation, result)) {
+                result.addErrorMessage("Those dates are not available with that host");
+            }
+        } else {
+            if (!dateAvailabilityUpdate(reservation, result)) {
+                result.addErrorMessage("Those dates are not available with that host");
+            }
+        }
+
 
         return result;
     }
@@ -96,7 +131,7 @@ public class ReservationService {
         return matcher.find();
     }
 
-    private boolean dateAvailability(Reservation reservation, Result<Reservation> result) {
+    private boolean dateAvailabilityAdd(Reservation reservation, Result<Reservation> result) {
 
         if (reservation.getStartDate() == null || reservation.getEndDate() == null) {
             return false;
@@ -110,11 +145,16 @@ public class ReservationService {
             result.addErrorMessage("Start Date is after End Date");
         }
 
+        if (reservation.getStartDate().isEqual(reservation.getEndDate())) {
+            result.addErrorMessage("Start Date cannot be the same as End Date");
+        }
+
         int scheduleCounter = 0;
         List<Reservation> all = findByHost(reservation.getHost());
         for (Reservation r : all) {
             if (r.getEndDate().isBefore(reservation.getStartDate())
                     || r.getEndDate().equals(reservation.getStartDate())
+                    || r.getStartDate().equals(reservation.getEndDate())
                     || r.getStartDate().isAfter(reservation.getEndDate())) {
                 scheduleCounter++;
             }
@@ -125,6 +165,37 @@ public class ReservationService {
         return false;
     }
 
+    private boolean dateAvailabilityUpdate(Reservation reservation, Result<Reservation> result) {
+        if (reservation.getStartDate() == null || reservation.getEndDate() == null) {
+            return false;
+        }
 
+        if (reservation.getStartDate().isBefore(LocalDate.now())
+                || reservation.getEndDate().isBefore(LocalDate.now())) {
+            result.addErrorMessage("Date is not in the future");
+        }
+        if (reservation.getStartDate().isAfter(reservation.getEndDate())) {
+            result.addErrorMessage("Start Date is after End Date");
+        }
 
+        if (reservation.getStartDate().isEqual(reservation.getEndDate())) {
+            result.addErrorMessage("Start Date cannot be the same as End Date");
+        }
+
+        int scheduleCounter = 0;
+        List<Reservation> all = findByHost(reservation.getHost());
+        for (Reservation r : all) {
+            if (r.getId() == reservation.getId()
+                    ||r.getEndDate().isBefore(reservation.getStartDate())
+                    || r.getEndDate().equals(reservation.getStartDate())
+                    || r.getStartDate().equals(reservation.getEndDate())
+                    || r.getStartDate().isAfter(reservation.getEndDate())) {
+                scheduleCounter++;
+            }
+        }
+        if (scheduleCounter == all.size()) {
+            return true;
+        }
+        return false;
+    }
 }

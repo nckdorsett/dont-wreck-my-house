@@ -65,7 +65,7 @@ class HostFileRepositoryTest {
         Host host = new Host("",
                 "Dorsett","bmoorcroftj@topsy.com",
                 "(352) 5465804","696 Love lane",
-                "Dallas","Texas",15568, new BigDecimal(477), new BigDecimal(596.25));
+                "Dallas","Texas","15568", new BigDecimal(477), new BigDecimal(596.25));
         repository.add(host);
         List<Host> all = repository.findAll();
         assertEquals(36, host.getId().length());
@@ -86,7 +86,7 @@ class HostFileRepositoryTest {
         Host host = new Host("f92aa2ac-5370-4c61-87e3-3f18a81ce2e6",
                 "Moorcroft","bmoorcroftj@topsy.com",
                 "(352) 5465804","696 Love lane",
-                "Dallas","Texas",15568, new BigDecimal(477), new BigDecimal(596.25));
+                "Dallas","Texas","15568", new BigDecimal(477), new BigDecimal(596.25));
         assertTrue(repository.update(host));
     }
 
@@ -101,7 +101,7 @@ class HostFileRepositoryTest {
         Host host = new Host("",
                 "Moorcroft","bmoorcroftj@topsy.com",
                 "(352) 5465804","696 Love lane",
-                "Dallas","Texas",15568, new BigDecimal(477), new BigDecimal(596.25));
+                "Dallas","Texas","15568", new BigDecimal(477), new BigDecimal(596.25));
         assertFalse(repository.update(host));
     }
 
@@ -110,7 +110,7 @@ class HostFileRepositoryTest {
         Host host = new Host("f92aa2ac-5370-4c61-87e3-3f18a81ce2e6",
                 "Moorcroft","bmoorcroftj@topsy.com",
                 "(352) 5465804","28 Badeau Avenue",
-                "Ocala","FL",34479, new BigDecimal(477), new BigDecimal(596.25));
+                "Ocala","FL","34479", new BigDecimal(477), new BigDecimal(596.25));
         assertTrue(repository.delete(host));
 
         List<Host> all = repository.findAll();
@@ -128,7 +128,7 @@ class HostFileRepositoryTest {
         Host host = new Host("",
                 "Moorcroft","bmoorcroftj@topsy.com",
                 "(352) 5465804","28 Badeau Avenue",
-                "Ocala","FL",34479, new BigDecimal(477), new BigDecimal(596.25));
+                "Ocala","FL","34479", new BigDecimal(477), new BigDecimal(596.25));
         assertFalse(repository.delete(host));
     }
 

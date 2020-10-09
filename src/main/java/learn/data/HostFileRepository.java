@@ -138,7 +138,7 @@ public class HostFileRepository implements HostRepository {
         result.setAddress(fields[4]);
         result.setCity(fields[5]);
         result.setState(fields[6]);
-        result.setPostalCode(Integer.parseInt(fields[7]));
+        result.setPostalCode((fields[7]));
         result.setStdRate(new BigDecimal(fields[8]));
         result.setWkndRate(new BigDecimal(fields[9]));
 
