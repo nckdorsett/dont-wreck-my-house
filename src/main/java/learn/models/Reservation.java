@@ -107,6 +107,7 @@ public class Reservation {
     public BigDecimal calcTotal() {
         LocalDate start = startDate;
         LocalDate end = endDate;
+        total = BigDecimal.ZERO;
         for (; start.isBefore(end); start = start.plusDays(1)) {
             if (!(start.getDayOfWeek() == DayOfWeek.FRIDAY) ||  !(start.getDayOfWeek() == DayOfWeek.SATURDAY)) {
                 total = total.add(host.getStdRate());

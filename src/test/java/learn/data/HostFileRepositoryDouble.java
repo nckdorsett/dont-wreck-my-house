@@ -51,16 +51,23 @@ public class HostFileRepositoryDouble implements HostRepository{
 
     @Override
     public Host add(Host host) throws DataException {
-        return null;
+        return host;
     }
 
     @Override
     public boolean update(Host host) throws DataException {
-        return false;
+        return true;
     }
 
     @Override
     public boolean delete(Host host) throws DataException {
+        List<Host> all = findAll();
+        for (int index = 0; index < all.size(); index++) {
+            if (host.getId().equals(all.get(index).getId())) {
+                all.remove(index);
+                return true;
+            }
+        }
         return false;
     }
 }

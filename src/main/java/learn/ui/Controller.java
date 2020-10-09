@@ -79,9 +79,7 @@ public class Controller {
         Host host = validateHost();
         List<Reservation> reservations = reservationService.findByHost(host);
         view.displayReservations(reservations, host);
-        LocalDate startDate = view.getDate("Start (yyyy-MM-dd): ");
-        LocalDate endDate = view.getDate("End (yyyy-MM-dd): ");
-        Reservation newReservation = view.createReservation(host, guest, startDate, endDate);
+        Reservation newReservation = view.createReservation(host, guest, reservations);
         if (newReservation == null) {
             view.displayHeader("Reservation addition canceled.");
             return;
@@ -101,11 +99,9 @@ public class Controller {
         Guest guest = validateGuest();
         Host host = validateHost();
         List<Reservation> reservations = reservationService.findByHost(host);
-        List<Reservation> guestReservations = view.displayReservations(reservations, host, guest);
+        List<Reservation> guestReservations = view.displayAndReturnReservations(reservations, host, guest);
         Reservation updateChoice = view.chooseReservation(guestReservations);
-        LocalDate startDate = view.getDate("Start (yyyy-MM-dd): ");
-        LocalDate endDate = view.getDate("End (yyyy-MM-dd): ");
-        Reservation newReservation = view.updateReservation(updateChoice, startDate, endDate);
+        Reservation newReservation = view.updateReservation(updateChoice, reservations);
         if (newReservation == null) {
             view.displayHeader("Reservation update canceled.");
             return;
@@ -124,8 +120,12 @@ public class Controller {
         Guest guest = validateGuest();
         Host host = validateHost();
         List<Reservation> reservations = reservationService.findByHost(host);
-        List<Reservation> guestReservations = view.displayReservations(reservations, host, guest);
+        List<Reservation> guestReservations = view.displayAndReturnReservations(reservations, host, guest);
         Reservation deleteChoice = view.chooseReservation(guestReservations);
+        if (!view.confirm("Is this okay to remove? [y/n]: ")) {
+            view.displayHeader("Reservation cancellation canceled.");
+            return;
+        }
         Result<Reservation> result = reservationService.delete(deleteChoice);
         if (!result.isSuccess()) {
             view.displayStatus(false, result.getErrorMessages());
@@ -135,16 +135,43 @@ public class Controller {
         }
     }
 
-    private void addGuest() {
-
+    private void addGuest() throws DataException {
+        view.displayHeader("Add a Guest");
+        Guest guest = view.createGuest();
+        Result<Guest> result = guestService.add(guest);
+        if (!result.isSuccess()) {
+            view.displayStatus(false, result.getErrorMessages());
+        } else {
+            String success = String.format("Guest %s %s %s was added to the guest list.", result.getPayload().getId()
+            , result.getPayload().getFirstName(), result.getPayload().getLastName());
+            view.displayStatus(result.isSuccess(), success);
+        }
     }
 
-    private void updateGuest() {
-
+    private void updateGuest() throws DataException {
+        view.displayHeader("Update a Guest");
+        Guest guest = validateGuest();
+        Result<Guest> result = guestService.update(view.updateGuest(guest));
+        if (!result.isSuccess()) {
+            view.displayStatus(false, result.getErrorMessages());
+        } else {
+            String success = String.format("Guest %s %s %s was updated successfully.", result.getPayload().getId()
+                    , result.getPayload().getFirstName(), result.getPayload().getLastName());
+            view.displayStatus(result.isSuccess(), success);
+        }
     }
 
-    private void deleteGuest() {
-
+    private void deleteGuest() throws DataException {
+        view.displayHeader("Remove a Guest");
+        Guest guest = validateGuest();
+        Result<Guest> result = guestService.delete(guest);
+        if (!result.isSuccess()) {
+            view.displayStatus(false, result.getErrorMessages());
+        } else {
+            String success = String.format("Guest %s %s %s was removed successfully.", result.getPayload().getId()
+                    , result.getPayload().getFirstName(), result.getPayload().getLastName());
+            view.displayStatus(result.isSuccess(), success);
+        }
     }
 
     // Helper methods

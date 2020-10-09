@@ -25,12 +25,30 @@ public class GuestService {
         if (!result.isSuccess()) {
             return result;
         }
+
+        if (findByEmail(guest.getEmail()) != null) {
+            result.addErrorMessage("Guest is a duplicate");
+        }
+        if (!result.isSuccess()) {
+            return result;
+        }
+
         result.setPayload(repository.add(guest));
         return result;
     }
 
     public Result<Guest> update(Guest guest) throws DataException {
         Result<Guest> result = validation(guest);
+        if (!result.isSuccess()) {
+            return result;
+        }
+
+        for (Guest g : repository.findAll()) {
+            if (guest.getEmail().equals(g.getEmail())
+                    && guest.getId() != g.getId()) {
+                result.addErrorMessage("Guest is using a duplicate email");
+            }
+        }
         if (!result.isSuccess()) {
             return result;
         }
@@ -89,9 +107,6 @@ public class GuestService {
             result.addErrorMessage("Invalid State");
         }
 
-        if (findByEmail(guest.getEmail()) != null) {
-            result.addErrorMessage("Guest is a duplicate");
-        }
         return result;
     }
 
@@ -180,7 +195,7 @@ public class GuestService {
         return matcher.find();
     }
 
-    public boolean containsOnlyCharacters(String input) {
+    private boolean containsOnlyCharacters(String input) {
         return Pattern.matches("[a-zA-Z']+", input);
     }
 

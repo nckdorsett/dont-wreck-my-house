@@ -1,5 +1,6 @@
 package learn.ui;
 
+import learn.domain.Result;
 import learn.models.Guest;
 import learn.models.Host;
 import learn.models.Reservation;
@@ -35,8 +36,12 @@ public class View {
         return io.readRequiredString(prompt);
     }
 
-    public LocalDate getDate(String prompt) {
-        return io.readLocalDate(prompt);
+    public LocalDate getDate(String prompt, LocalDate date) {
+        return io.readLocalDate(prompt, date);
+    }
+
+    public LocalDate getRequiredDate(String prompt) {
+        return io.readRequiredLocalDate(prompt);
     }
 
     public Reservation chooseReservation(List<Reservation> reservations) {
@@ -54,12 +59,14 @@ public class View {
 
 
     //Create and updates
-    public Reservation createReservation(Host host, Guest guest, LocalDate start, LocalDate end) {
+    public Reservation createReservation(Host host, Guest guest, List<Reservation> reservations) {
         Reservation reservation = new Reservation();
         reservation.setGuest(guest);
         reservation.setHost(host);
-        reservation.setStartDate(start);
-        reservation.setEndDate(end);
+        do {
+            reservation.setStartDate(getRequiredDate("Start Date: "));
+            reservation.setEndDate(getRequiredDate("End Date: "));
+        } while(!dateAvailabilityAdd(reservation, reservations));
         reservation.setTotal(reservation.calcTotal());
         displaySummary(reservation);
         if(io.readBoolean("Is this okay? [y/n]: ")) {
@@ -68,17 +75,60 @@ public class View {
         return null;
     }
 
-    public Reservation updateReservation(Reservation reservation, LocalDate start, LocalDate end) {
-        reservation.setStartDate(start);
-        reservation.setEndDate(end);
-        reservation.setTotal(reservation.calcTotal());
+    public Reservation updateReservation(Reservation reservation, List<Reservation> reservations) {
+        Reservation updatedReservation = reservation;
+        do {
+            updatedReservation.setStartDate(getDate("Start Date: ", updatedReservation.getStartDate()));
+            updatedReservation.setEndDate(getDate("End Date: ", updatedReservation.getEndDate()));
+        } while (!dateAvailabilityUpdate(updatedReservation, reservations));
+        updatedReservation.setTotal(reservation.calcTotal());
         displaySummary(reservation);
         if(io.readBoolean("Is this okay? [y/n]: ")) {
-            return reservation;
+            return updatedReservation;
         }
         return null;
     }
 
+    public boolean confirm(String message) {
+        return io.readBoolean(message);
+    }
+
+    public Guest createGuest() {
+        Guest guest = new Guest();
+        guest.setFirstName(io.readRequiredName("First Name: "));
+        guest.setLastName(io.readRequiredName("Last Name: "));
+        guest.setEmail(io.readRequiredEmail("Email: "));
+        guest.setPhoneNumber(io.readRequiredPhoneNumber("Phone Number (###) #######: "));
+        guest.setState(io.readRequiredState("State Abbreviation: "));
+        return guest;
+    }
+
+    public Guest updateGuest(Guest guest) {
+        io.println("Press [Enter] to keep the same value");
+        io.println("");
+
+        String firstName = io.readName("First Name (" + guest.getFirstName() + "): ");
+        if (firstName.trim().length() > 0) {
+            guest.setFirstName(firstName);
+        }
+        String lastName = io.readName("Last Name (" + guest.getLastName() + "): ");
+        if (lastName.trim().length() > 0) {
+            guest.setLastName(lastName);
+        }
+        String email = io.readEmail("Email (" + guest.getEmail() + "): ");
+        if (email.trim().length() > 0) {
+            guest.setEmail(email);
+        }
+        String phoneNumber = io.readPhoneNumber("Phone Number (" + guest.getPhoneNumber() + "): ");
+        if (phoneNumber.trim().length() > 0) {
+            guest.setPhoneNumber(phoneNumber);
+        }
+        String state = io.readState("State (" + guest.getState() + "): ");
+        if (state.trim().length() > 0) {
+            guest.setState(state);
+        }
+        return guest;
+    }
 
 
 
@@ -132,7 +182,7 @@ public class View {
         }
     }
 
-    public List<Reservation> displayReservations(List<Reservation> reservations, Host host, Guest guest) {
+    public List<Reservation> displayAndReturnReservations(List<Reservation> reservations, Host host, Guest guest) {
         if (reservations == null || reservations.isEmpty()) {
             displayHeader(host.getLastName() + ": " + host.getCity() +
                     ", " + host.getState());
@@ -161,6 +211,84 @@ public class View {
         io.println("Start: " + reservation.getStartDate());
         io.println("End: " + reservation.getEndDate());
         io.println("Total: $" + reservation.getTotal());
+    }
+
+
+
+
+
+    private boolean dateAvailabilityAdd(Reservation reservation, List<Reservation> reservations) {
+
+        if (reservation.getStartDate() == null || reservation.getEndDate() == null) {
+            return false;
+        }
+
+        if (reservation.getStartDate().isBefore(LocalDate.now())
+                || reservation.getEndDate().isBefore(LocalDate.now())) {
+            io.println("Date is not in the future");
+            return false;
+        }
+        if (reservation.getStartDate().isAfter(reservation.getEndDate())) {
+            io.println("Start Date is after End Date");
+            return false;
+        }
+
+        if (reservation.getStartDate().isEqual(reservation.getEndDate())) {
+            io.println("Start Date cannot be the same as End Date");
+            return false;
+        }
+
+        int scheduleCounter = 0;
+        for (Reservation r : reservations) {
+            if (r.getEndDate().isBefore(reservation.getStartDate())
+                    || r.getEndDate().equals(reservation.getStartDate())
+                    || r.getStartDate().equals(reservation.getEndDate())
+                    || r.getStartDate().isAfter(reservation.getEndDate())) {
+                scheduleCounter++;
+            }
+        }
+        if (scheduleCounter == reservations.size()) {
+            return true;
+        }
+        io.println("Those dates are not available.");
+        return false;
+    }
+
+    private boolean dateAvailabilityUpdate(Reservation reservation, List<Reservation> reservations) {
+        if (reservation.getStartDate() == null || reservation.getEndDate() == null) {
+            return false;
+        }
+
+        if (reservation.getStartDate().isBefore(LocalDate.now())
+                || reservation.getEndDate().isBefore(LocalDate.now())) {
+            io.println("Date is not in the future");
+            return false;
+        }
+        if (reservation.getStartDate().isAfter(reservation.getEndDate())) {
+            io.println("Start Date is after End Date");
+            return false;
+        }
+
+        if (reservation.getStartDate().isEqual(reservation.getEndDate())) {
+            io.println("Start Date cannot be the same as End Date");
+            return false;
+        }
+
+        int scheduleCounter = 0;
+        for (Reservation r : reservations) {
+            if (r.getId() == reservation.getId()
+                    ||r.getEndDate().isBefore(reservation.getStartDate())
+                    || r.getEndDate().equals(reservation.getStartDate())
+                    || r.getStartDate().equals(reservation.getEndDate())
+                    || r.getStartDate().isAfter(reservation.getEndDate())) {
+                scheduleCounter++;
+            }
+        }
+        if (scheduleCounter == reservations.size()) {
+            return true;
+        }
+        io.println("Those dates are not available.");
+        return false;
     }
 
 }
