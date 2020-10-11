@@ -1,7 +1,5 @@
 package learn.ui;
 
-import com.sun.tools.javadoc.Main;
-
 public enum MainMenuOptions {
     EXIT(0, "EXIT"),
     VIEW_RESERVATIONS_BY_HOST(1, "View Reservations by Host"),
@@ -10,10 +8,13 @@ public enum MainMenuOptions {
     DELETE_RESERVATION(4, "Cancel a reservation"),
     ADD_GUEST(5, "Add a Guest"),
     UPDATE_GUEST(6, "Update a Guest"),
-    DELETE_GUEST(7, "Remove a Guest");
+    DELETE_GUEST(7, "Remove a Guest"),
+    ADD_HOST(8,"Add a Host"),
+    UPDATE_HOST(9, "Update a Host"),
+    DELETE_HOST(10, "Remove a Host");
 
-    private int value;
-    private String message;
+    private final int value;
+    private final String message;
 
     public int getValue() {
         return value;
@@ -23,7 +24,7 @@ public enum MainMenuOptions {
         return message;
     }
 
-    private MainMenuOptions(int value, String message) {
+    MainMenuOptions(int value, String message) {
         this.value = value;
         this.message = message;
     }

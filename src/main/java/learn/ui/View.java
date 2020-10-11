@@ -1,18 +1,20 @@
 package learn.ui;
 
-import learn.domain.Result;
 import learn.models.Guest;
 import learn.models.Host;
 import learn.models.Reservation;
+import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Component
 public class View {
 
-    private ConsoleIO io;
+    private final ConsoleIO io;
 
     public View(ConsoleIO io) {
         this.io = io;
@@ -56,17 +58,15 @@ public class View {
         }
     }
 
-
-
     //Create and updates
     public Reservation createReservation(Host host, Guest guest, List<Reservation> reservations) {
         Reservation reservation = new Reservation();
         reservation.setGuest(guest);
         reservation.setHost(host);
         do {
-            reservation.setStartDate(getRequiredDate("Start Date: "));
-            reservation.setEndDate(getRequiredDate("End Date: "));
-        } while(!dateAvailabilityAdd(reservation, reservations));
+            reservation.setStartDate(getRequiredDate("Start Date (yyyy-MM-dd): "));
+            reservation.setEndDate(getRequiredDate("End Date (yyyy-MM-dd): "));
+        } while(!dateOverlapForAdd(reservation, reservations));
         reservation.setTotal(reservation.calcTotal());
         displaySummary(reservation);
         if(io.readBoolean("Is this okay? [y/n]: ")) {
@@ -76,15 +76,14 @@ public class View {
     }
 
     public Reservation updateReservation(Reservation reservation, List<Reservation> reservations) {
-        Reservation updatedReservation = reservation;
         do {
-            updatedReservation.setStartDate(getDate("Start Date: ", updatedReservation.getStartDate()));
-            updatedReservation.setEndDate(getDate("End Date: ", updatedReservation.getEndDate()));
-        } while (!dateAvailabilityUpdate(updatedReservation, reservations));
-        updatedReservation.setTotal(reservation.calcTotal());
+            reservation.setStartDate(getDate("Start Date (yyyy-MM-dd): ", reservation.getStartDate()));
+            reservation.setEndDate(getDate("End Date (yyyy-MM-dd): ", reservation.getEndDate()));
+        } while (!dateOverlapForUpdate(reservation, reservations));
+        reservation.setTotal(reservation.calcTotal());
         displaySummary(reservation);
         if(io.readBoolean("Is this okay? [y/n]: ")) {
-            return updatedReservation;
+            return reservation;
         }
         return null;
     }
@@ -100,7 +99,11 @@ public class View {
         guest.setEmail(io.readRequiredEmail("Email: "));
         guest.setPhoneNumber(io.readRequiredPhoneNumber("Phone Number (###) #######: "));
         guest.setState(io.readRequiredState("State Abbreviation: "));
-        return guest;
+        displaySummary(guest);
+        if(io.readBoolean("Is this okay? [y/n]: ")) {
+            return guest;
+        }
+        return null;
     }
 
     public Guest updateGuest(Guest guest) {
@@ -127,30 +130,79 @@ public class View {
         if (state.trim().length() > 0) {
             guest.setState(state);
         }
-        return guest;
+        displaySummary(guest);
+        if(io.readBoolean("Is this okay? [y/n]: ")) {
+            return guest;
+        }
+        return null;
     }
 
+    public Host createHost() {
+        Host host = new Host();
+        host.setLastName(io.readRequiredName("Last Name: "));
+        host.setEmail(io.readRequiredEmail("Email: "));
+        host.setPhoneNumber(io.readRequiredPhoneNumber("Phone Number (###) #######: "));
+        host.setAddress(io.readRequiredString("Address: "));
+        host.setCity(io.readRequiredName("City: "));
+        host.setState(io.readRequiredState("State: "));
+        host.setPostalCode(io.readRequiredPostal("Postal Code: "));
+        host.setStdRate(io.readRequiredBigDecimal("Standard Rate $: ", BigDecimal.ZERO, new BigDecimal("1000000000")));
+        host.setWkndRate(io.readRequiredBigDecimal("Weekend Rate $: ", BigDecimal.ZERO, new BigDecimal("1000000000")));
+        displaySummary(host);
+        if(io.readBoolean("Is this okay? [y/n]: ")) {
+            return host;
+        }
+        return null;
+    }
 
+    public Host updateHost(Host host) {
+        io.println("Press [Enter] to keep the same value");
+        io.println("");
 
-
-
-
-
-
-
-
-
+        String lastName = io.readName("Last Name (" + host.getLastName() + "): ");
+        if (lastName.trim().length() > 0) {
+            host.setLastName(lastName);
+        }
+        String email = io.readEmail("Email (" + host.getEmail() + "): ");
+        if (email.trim().length() > 0) {
+            host.setEmail(email);
+        }
+        String phoneNumber = io.readPhoneNumber("Phone Number (" + host.getPhoneNumber() + "): ");
+        if (phoneNumber.trim().length() > 0) {
+            host.setPhoneNumber(phoneNumber);
+        }
+        String address = io.readString("Address (" + host.getAddress() + "): ");
+        if (address.trim().length() > 0) {
+            host.setAddress(address);
+        }
+        String city = io.readName("City (" + host.getCity() + "): ");
+        if (city.trim().length() > 0) {
+            host.setCity(city);
+        }
+        String state = io.readState("State (" + host.getState() + "): ");
+        if (state.trim().length() > 0) {
+            host.setState(state);
+        }
+        String postal = io.readPostalCode("Postal Code (" + host.getPostalCode() + "): ");
+        if (postal.trim().length() > 0) {
+            host.setPostalCode(postal);
+        }
+        host.setStdRate(io.readBigDecimal("Standard Rate (" + host.getStdRate() + "): "
+                , host.getStdRate(), BigDecimal.ZERO, new BigDecimal("1000000000")));
+        host.setWkndRate(io.readBigDecimal("Weekend Rate (" + host.getWkndRate() + "): "
+                , host.getWkndRate(), BigDecimal.ZERO, new BigDecimal("1000000000")));
+        displaySummary(host);
+        if(io.readBoolean("Is this okay? [y/n]: ")) {
+            return host;
+        }
+        return null;
+    }
 
     //display only
     public void displayHeader(String prompt) {
         io.println("");
         io.println(prompt);
         io.println("=".repeat(prompt.length()));
-    }
-
-    public void displayException(Exception ex) {
-        displayHeader("A critical error occurred");
-        io.println(ex.getMessage());
     }
 
     public void displayStatus(boolean success, String message) {
@@ -213,28 +265,31 @@ public class View {
         io.println("Total: $" + reservation.getTotal());
     }
 
+    public void displaySummary(Guest guest) {
+        displayHeader("Summary");
+        io.println("First Name: " + guest.getFirstName());
+        io.println("Last Name: " + guest.getLastName());
+        io.println("Email: " + guest.getEmail());
+        io.println("Phone Number: " + guest.getPhoneNumber());
+        io.println("State: " + guest.getState());
+    }
 
+    public void displaySummary(Host host) {
+        displayHeader("Summary");
+        io.println("Last Name: " + host.getLastName());
+        io.println("Email: " + host.getEmail());
+        io.println("Phone Number: " + host.getPhoneNumber());
+        io.println("Address: " + host.getAddress());
+        io.println("City: " + host.getCity());
+        io.println("State: " + host.getState());
+        io.println("Postal Code: " + host.getPostalCode());
+        io.println("Standard Rate: $" + host.getStdRate());
+        io.println("Weekend Rate: $" + host.getWkndRate());
+    }
 
-
-
-    private boolean dateAvailabilityAdd(Reservation reservation, List<Reservation> reservations) {
-
-        if (reservation.getStartDate() == null || reservation.getEndDate() == null) {
-            return false;
-        }
-
-        if (reservation.getStartDate().isBefore(LocalDate.now())
-                || reservation.getEndDate().isBefore(LocalDate.now())) {
-            io.println("Date is not in the future");
-            return false;
-        }
-        if (reservation.getStartDate().isAfter(reservation.getEndDate())) {
-            io.println("Start Date is after End Date");
-            return false;
-        }
-
-        if (reservation.getStartDate().isEqual(reservation.getEndDate())) {
-            io.println("Start Date cannot be the same as End Date");
+    // Helper methods
+    private boolean dateOverlapForAdd(Reservation reservation, List<Reservation> reservations) {
+        if (!startEndCheck(reservation)) {
             return false;
         }
 
@@ -254,23 +309,8 @@ public class View {
         return false;
     }
 
-    private boolean dateAvailabilityUpdate(Reservation reservation, List<Reservation> reservations) {
-        if (reservation.getStartDate() == null || reservation.getEndDate() == null) {
-            return false;
-        }
-
-        if (reservation.getStartDate().isBefore(LocalDate.now())
-                || reservation.getEndDate().isBefore(LocalDate.now())) {
-            io.println("Date is not in the future");
-            return false;
-        }
-        if (reservation.getStartDate().isAfter(reservation.getEndDate())) {
-            io.println("Start Date is after End Date");
-            return false;
-        }
-
-        if (reservation.getStartDate().isEqual(reservation.getEndDate())) {
-            io.println("Start Date cannot be the same as End Date");
+    private boolean dateOverlapForUpdate(Reservation reservation, List<Reservation> reservations) {
+        if (!startEndCheck(reservation)) {
             return false;
         }
 
@@ -291,4 +331,25 @@ public class View {
         return false;
     }
 
+    private boolean startEndCheck(Reservation reservation) {
+        if (reservation.getStartDate() == null || reservation.getEndDate() == null) {
+            return false;
+        }
+
+        if (reservation.getStartDate().isBefore(LocalDate.now())
+                || reservation.getEndDate().isBefore(LocalDate.now())) {
+            io.println("Date is not in the future");
+            return false;
+        }
+        if (reservation.getStartDate().isAfter(reservation.getEndDate())) {
+            io.println("Start Date is after End Date");
+            return false;
+        }
+
+        if (reservation.getStartDate().isEqual(reservation.getEndDate())) {
+            io.println("Start Date cannot be the same as End Date");
+            return false;
+        }
+        return true;
+    }
 }

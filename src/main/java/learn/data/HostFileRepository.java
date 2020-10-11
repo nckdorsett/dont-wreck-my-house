@@ -1,20 +1,22 @@
 package learn.data;
 
-import learn.models.Guest;
 import learn.models.Host;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Repository;
 
 import java.io.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+@Repository
 public class HostFileRepository implements HostRepository {
 
     private final String HEADER = "id,last_name,email,phone,address,city,state,postal_code,standard_rate,weekend_rate";
     private final String DELIMITER = ",";
     private final String filePath;
 
-    public HostFileRepository(String filePath) {
+    public HostFileRepository(@Value("${hostDataFilePath}") String filePath) {
         this.filePath = filePath;
     }
 
@@ -65,7 +67,7 @@ public class HostFileRepository implements HostRepository {
         if (host == null) {
             return null;
         }
-        List<Host> all = findAll();;
+        List<Host> all = findAll();
         host.setId(java.util.UUID.randomUUID().toString());
         all.add(host);
         writeAll(all);

@@ -1,5 +1,7 @@
 package learn.ui;
 
+import org.springframework.stereotype.Component;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -8,6 +10,7 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Component
 public class ConsoleIO {
 
     private static final String INVALID_NUMBER
@@ -26,9 +29,11 @@ public class ConsoleIO {
             = "[INVALID] Enter a valid State abbreviation.";
     private static final String CHARACTER_ERROR
             = "[INVALID] Name cannot contain special characters or numbers.";
+    private static final String POSTAL_ERROR
+            = "[INVALID] Enter a 5 digit Postal Code #####.";
 
     private final Scanner scanner = new Scanner(System.in);
-    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     public void print(String message) {
         System.out.print(message);
@@ -89,17 +94,6 @@ public class ConsoleIO {
         }
     }
 
-    public LocalDate readRequiredLocalDate(String prompt) {
-        while (true) {
-            String input = readRequiredString(prompt);
-            try {
-                return LocalDate.parse(input, formatter);
-            } catch (DateTimeParseException ex) {
-                println(INVALID_DATE);
-            }
-        }
-    }
-
     public LocalDate readLocalDate(String prompt, LocalDate date) {
         while (true) {
             String input = readString(prompt);
@@ -114,7 +108,42 @@ public class ConsoleIO {
         }
     }
 
-    public BigDecimal readBigDecimal(String prompt) {
+    public LocalDate readRequiredLocalDate(String prompt) {
+        while (true) {
+            String input = readRequiredString(prompt);
+            try {
+                return LocalDate.parse(input, formatter);
+            } catch (DateTimeParseException ex) {
+                println(INVALID_DATE);
+            }
+        }
+    }
+
+    public BigDecimal readBigDecimal(String prompt, BigDecimal D) {
+        while (true) {
+            String input = readString(prompt);
+            if (input.isBlank()) {
+                return D;
+            }
+            try {
+                return new BigDecimal(input);
+            } catch (NumberFormatException ex) {
+                println(INVALID_NUMBER);
+            }
+        }
+    }
+
+    public BigDecimal readBigDecimal(String prompt, BigDecimal D, BigDecimal min, BigDecimal max) {
+        while (true) {
+            BigDecimal result = readBigDecimal(prompt, D);
+            if (result.compareTo(min) > 0 && result.compareTo(max) < 0) {
+                return result;
+            }
+            println(String.format(NUMBER_OUT_OF_RANGE, min, max));
+        }
+    }
+
+    public BigDecimal readRequiredBigDecimal(String prompt) {
         while (true) {
             String input = readRequiredString(prompt);
             try {
@@ -125,10 +154,10 @@ public class ConsoleIO {
         }
     }
 
-    public BigDecimal readBigDecimal(String prompt, BigDecimal min, BigDecimal max) {
+    public BigDecimal readRequiredBigDecimal(String prompt, BigDecimal min, BigDecimal max) {
         while (true) {
-            BigDecimal result = readBigDecimal(prompt);
-            if (result.compareTo(min) >= 0 && result.compareTo(max) <= 0) {
+            BigDecimal result = readRequiredBigDecimal(prompt);
+            if (result.compareTo(min) > 0 && result.compareTo(max) < 0) {
                 return result;
             }
             println(String.format(NUMBER_OUT_OF_RANGE, min, max));
@@ -141,6 +170,16 @@ public class ConsoleIO {
             if (input.isBlank()) {
                 return input;
             }
+            if (isEmailAddress(input)) {
+                return input;
+            }
+            println(INVALID_EMAIL);
+        }
+    }
+
+    public String readRequiredEmail(String prompt) {
+        while (true) {
+            String input = readRequiredString(prompt);
             if (isEmailAddress(input)) {
                 return input;
             }
@@ -161,12 +200,32 @@ public class ConsoleIO {
         }
     }
 
+    public String readRequiredPhoneNumber(String prompt) {
+        while (true) {
+            String input = readRequiredString(prompt);
+            if (isPhoneNumber(input)) {
+                return input;
+            }
+            println(INVALID_PHONE);
+        }
+    }
+
     public String readState(String prompt) {
         while (true) {
             String input = readString(prompt);
             if (input.isBlank()) {
                 return input;
             }
+            if (isAState(input)) {
+                return input;
+            }
+            println(INVALID_STATE);
+        }
+    }
+
+    public String readRequiredState(String prompt) {
+        while (true) {
+            String input = readRequiredString(prompt);
             if (isAState(input)) {
                 return input;
             }
@@ -187,36 +246,6 @@ public class ConsoleIO {
         }
     }
 
-    public String readRequiredEmail(String prompt) {
-        while (true) {
-            String input = readRequiredString(prompt);
-            if (isEmailAddress(input)) {
-                return input;
-            }
-            println(INVALID_EMAIL);
-        }
-    }
-
-    public String readRequiredPhoneNumber(String prompt) {
-        while (true) {
-            String input = readRequiredString(prompt);
-            if (isPhoneNumber(input)) {
-                return input;
-            }
-            println(INVALID_PHONE);
-        }
-    }
-
-    public String readRequiredState(String prompt) {
-        while (true) {
-            String input = readRequiredString(prompt);
-            if (isAState(input)) {
-                return input;
-            }
-            println(INVALID_STATE);
-        }
-    }
-
     public String readRequiredName(String prompt) {
         while (true) {
             String input = readRequiredString(prompt);
@@ -227,6 +256,28 @@ public class ConsoleIO {
         }
     }
 
+    public String readPostalCode(String prompt) {
+        while (true) {
+            String input = readString(prompt);
+            if (input.isBlank()) {
+                return input;
+            }
+            if (isPostalCode(input)) {
+                return input;
+            }
+            println(POSTAL_ERROR);
+        }
+    }
+
+    public String readRequiredPostal(String prompt) {
+        while (true) {
+            String input = readRequiredString(prompt);
+            if (isPostalCode(input)) {
+                return input;
+            }
+            println(POSTAL_ERROR);
+        }
+    }
 
     // validation methods
     private boolean isPhoneNumber(String phone) {
@@ -250,7 +301,7 @@ public class ConsoleIO {
     }
 
     public boolean containsOnlyCharacters(String input) {
-        return Pattern.matches("[a-zA-Z']+", input);
+        return Pattern.matches("[a-zA-Z'\\s]+", input);
     }
 
     private boolean isAState(String state) {
@@ -309,6 +360,16 @@ public class ConsoleIO {
                 return true;
         }
         return false;
+    }
+
+    private boolean isPostalCode(String postal) {
+        if (postal == null) {
+            return false;
+        }
+        String postalRegex = "^\\d{5}$";
+        Pattern postalPattern = Pattern.compile(postalRegex, Pattern.CASE_INSENSITIVE);
+        Matcher matcher = postalPattern.matcher(postal);
+        return matcher.find();
     }
 
 }

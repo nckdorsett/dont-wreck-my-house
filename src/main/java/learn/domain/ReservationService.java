@@ -6,12 +6,14 @@ import learn.data.HostRepository;
 import learn.data.ReservationRepository;
 import learn.models.Host;
 import learn.models.Reservation;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Service
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
@@ -132,21 +134,8 @@ public class ReservationService {
     }
 
     private boolean dateAvailabilityAdd(Reservation reservation, Result<Reservation> result) {
-
-        if (reservation.getStartDate() == null || reservation.getEndDate() == null) {
+        if (!startEndCheck(reservation, result)) {
             return false;
-        }
-
-        if (reservation.getStartDate().isBefore(LocalDate.now())
-                || reservation.getEndDate().isBefore(LocalDate.now())) {
-            result.addErrorMessage("Date is not in the future");
-        }
-        if (reservation.getStartDate().isAfter(reservation.getEndDate())) {
-            result.addErrorMessage("Start Date is after End Date");
-        }
-
-        if (reservation.getStartDate().isEqual(reservation.getEndDate())) {
-            result.addErrorMessage("Start Date cannot be the same as End Date");
         }
 
         int scheduleCounter = 0;
@@ -159,27 +148,12 @@ public class ReservationService {
                 scheduleCounter++;
             }
         }
-        if (scheduleCounter == all.size()) {
-            return true;
-        }
-        return false;
+        return scheduleCounter == all.size();
     }
 
     private boolean dateAvailabilityUpdate(Reservation reservation, Result<Reservation> result) {
-        if (reservation.getStartDate() == null || reservation.getEndDate() == null) {
+        if (!startEndCheck(reservation, result)) {
             return false;
-        }
-
-        if (reservation.getStartDate().isBefore(LocalDate.now())
-                || reservation.getEndDate().isBefore(LocalDate.now())) {
-            result.addErrorMessage("Date is not in the future");
-        }
-        if (reservation.getStartDate().isAfter(reservation.getEndDate())) {
-            result.addErrorMessage("Start Date is after End Date");
-        }
-
-        if (reservation.getStartDate().isEqual(reservation.getEndDate())) {
-            result.addErrorMessage("Start Date cannot be the same as End Date");
         }
 
         int scheduleCounter = 0;
@@ -193,9 +167,25 @@ public class ReservationService {
                 scheduleCounter++;
             }
         }
-        if (scheduleCounter == all.size()) {
-            return true;
+        return scheduleCounter == all.size();
+    }
+
+    private boolean startEndCheck(Reservation reservation, Result<Reservation> result) {
+        if (reservation.getStartDate() == null || reservation.getEndDate() == null) {
+            return false;
         }
-        return false;
+
+        if (reservation.getStartDate().isBefore(LocalDate.now())
+                || reservation.getEndDate().isBefore(LocalDate.now())) {
+            result.addErrorMessage("Date is not in the future");
+        }
+        if (reservation.getStartDate().isAfter(reservation.getEndDate())) {
+            result.addErrorMessage("Start Date is after End Date");
+        }
+
+        if (reservation.getStartDate().isEqual(reservation.getEndDate())) {
+            result.addErrorMessage("Start Date cannot be the same as End Date");
+        }
+        return true;
     }
 }

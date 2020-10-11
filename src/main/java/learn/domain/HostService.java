@@ -3,11 +3,13 @@ package learn.domain;
 import learn.data.DataException;
 import learn.data.HostRepository;
 import learn.models.Host;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Service
 public class HostService {
 
     public final HostRepository repository;
@@ -118,13 +120,13 @@ public class HostService {
 
         if (host.getStdRate() == null) {
             result.addErrorMessage("Missing standard rate");
-        } else if (host.getStdRate().compareTo(BigDecimal.ZERO) < 0) {
+        } else if (host.getStdRate().compareTo(BigDecimal.ZERO) <= 0) {
             result.addErrorMessage("Standard rate must be greater than 0");
         }
 
         if (host.getWkndRate() == null) {
             result.addErrorMessage("Missing weekend rate");
-        } else if (host.getWkndRate().compareTo(BigDecimal.ZERO) < 0) {
+        } else if (host.getWkndRate().compareTo(BigDecimal.ZERO) <= 0) {
             result.addErrorMessage("Weekend rate must be greater than 0");
         }
 
@@ -190,10 +192,7 @@ public class HostService {
     }
 
     private boolean isNotNullOrEmpty(String name) {
-        if (name == null || name.isBlank()) {
-            return false;
-        }
-        return true;
+        return name != null && !name.isBlank();
     }
 
     private boolean isPhoneNumber(String phone) {
@@ -220,14 +219,14 @@ public class HostService {
         if (postal == null) {
             return false;
         }
-        String postalRegex = "\\d{5}";
+        String postalRegex = "^\\d{5}$";
         Pattern postalPattern = Pattern.compile(postalRegex, Pattern.CASE_INSENSITIVE);
         Matcher matcher = postalPattern.matcher(postal);
         return matcher.find();
     }
 
     private boolean containsOnlyCharacters(String input) {
-        return Pattern.matches("[a-zA-Z']+", input);
+        return Pattern.matches("[a-zA-Z'\\s]+", input);
     }
 
 

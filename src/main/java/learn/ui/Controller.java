@@ -8,10 +8,11 @@ import learn.domain.Result;
 import learn.models.Guest;
 import learn.models.Host;
 import learn.models.Reservation;
+import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.util.List;
 
+@Component
 public class Controller {
 
     private final GuestService guestService;
@@ -60,6 +61,15 @@ public class Controller {
                     break;
                 case DELETE_GUEST:
                     deleteGuest();
+                    break;
+                case ADD_HOST:
+                    addHost();
+                    break;
+                case UPDATE_HOST:
+                    updateHost();
+                    break;
+                case DELETE_HOST:
+                    deleteHost();
                     break;
             }
         } while (option != MainMenuOptions.EXIT);
@@ -138,11 +148,15 @@ public class Controller {
     private void addGuest() throws DataException {
         view.displayHeader("Add a Guest");
         Guest guest = view.createGuest();
+        if (guest == null) {
+            view.displayHeader("Guest addition canceled.");
+            return;
+        }
         Result<Guest> result = guestService.add(guest);
         if (!result.isSuccess()) {
             view.displayStatus(false, result.getErrorMessages());
         } else {
-            String success = String.format("Guest %s %s %s was added to the guest list.", result.getPayload().getId()
+            String success = String.format("Guest ID.%s %s %s was added to the guest list.", result.getPayload().getId()
             , result.getPayload().getFirstName(), result.getPayload().getLastName());
             view.displayStatus(result.isSuccess(), success);
         }
@@ -151,7 +165,12 @@ public class Controller {
     private void updateGuest() throws DataException {
         view.displayHeader("Update a Guest");
         Guest guest = validateGuest();
-        Result<Guest> result = guestService.update(view.updateGuest(guest));
+        guest = view.updateGuest(guest);
+        if (guest == null) {
+            view.displayHeader("Guest update canceled.");
+            return;
+        }
+        Result<Guest> result = guestService.update(guest);
         if (!result.isSuccess()) {
             view.displayStatus(false, result.getErrorMessages());
         } else {
@@ -164,12 +183,70 @@ public class Controller {
     private void deleteGuest() throws DataException {
         view.displayHeader("Remove a Guest");
         Guest guest = validateGuest();
+        view.displaySummary(guest);
+        if (!view.confirm("Is this okay to remove? [y/n]: ")) {
+            view.displayHeader("Guest removal canceled.");
+            return;
+        }
         Result<Guest> result = guestService.delete(guest);
         if (!result.isSuccess()) {
             view.displayStatus(false, result.getErrorMessages());
         } else {
             String success = String.format("Guest %s %s %s was removed successfully.", result.getPayload().getId()
                     , result.getPayload().getFirstName(), result.getPayload().getLastName());
+            view.displayStatus(result.isSuccess(), success);
+        }
+    }
+
+    private void addHost() throws DataException {
+        view.displayHeader("Add a Host");
+        Host host = view.createHost();
+        if (host == null) {
+            view.displayHeader("Host addition canceled.");
+            return;
+        }
+        Result<Host> result = hostService.add(host);
+        if (!result.isSuccess()) {
+            view.displayStatus(false, result.getErrorMessages());
+        } else {
+            String success = String.format("Host ID.%s %s was added to the host list.", result.getPayload().getId()
+                    , result.getPayload().getLastName());
+            view.displayStatus(result.isSuccess(), success);
+        }
+    }
+
+    private void updateHost() throws DataException {
+        view.displayHeader("Update a Host");
+        Host host = validateHost();
+        host = view.updateHost(host);
+        if (host == null) {
+            view.displayHeader("Host update canceled.");
+            return;
+        }
+        Result<Host> result = hostService.update(host);
+        if (!result.isSuccess()) {
+            view.displayStatus(false, result.getErrorMessages());
+        } else {
+            String success = String.format("Host ID.%s %s was updated successfully.", result.getPayload().getId()
+                    , result.getPayload().getLastName());
+            view.displayStatus(result.isSuccess(), success);
+        }
+    }
+
+    private void deleteHost() throws DataException {
+        view.displayHeader("Remove a Host");
+        Host host = validateHost();
+        view.displaySummary(host);
+        if (!view.confirm("Is this okay to remove? [y/n]: ")) {
+            view.displayHeader("Host removal canceled.");
+            return;
+        }
+        Result<Host> result = hostService.delete(host);
+        if (!result.isSuccess()) {
+            view.displayStatus(false, result.getErrorMessages());
+        } else {
+            String success = String.format("Host ID.%s %s was removed successfully.", result.getPayload().getId()
+                    , result.getPayload().getLastName());
             view.displayStatus(result.isSuccess(), success);
         }
     }

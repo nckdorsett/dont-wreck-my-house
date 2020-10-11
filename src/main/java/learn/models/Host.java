@@ -117,7 +117,7 @@ public class Host {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Host host = (Host) o;
-        return postalCode == host.postalCode &&
+        return postalCode.equals(host.postalCode) &&
                 Objects.equals(id, host.id) &&
                 Objects.equals(lastName, host.lastName) &&
                 Objects.equals(email, host.email) &&

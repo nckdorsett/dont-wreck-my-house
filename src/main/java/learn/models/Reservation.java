@@ -109,10 +109,10 @@ public class Reservation {
         LocalDate end = endDate;
         total = BigDecimal.ZERO;
         for (; start.isBefore(end); start = start.plusDays(1)) {
-            if (!(start.getDayOfWeek() == DayOfWeek.FRIDAY) ||  !(start.getDayOfWeek() == DayOfWeek.SATURDAY)) {
-                total = total.add(host.getStdRate());
-            } else {
+            if ((start.getDayOfWeek() == DayOfWeek.SATURDAY) ||  (start.getDayOfWeek() == DayOfWeek.SUNDAY)) {
                 total = total.add(host.getWkndRate());
+            } else {
+                total = total.add(host.getStdRate());
             }
         }
         return total;

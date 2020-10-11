@@ -3,10 +3,12 @@ package learn.domain;
 import learn.data.DataException;
 import learn.data.GuestRepository;
 import learn.models.Guest;
+import org.springframework.stereotype.Service;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Service
 public class GuestService {
 
     private final GuestRepository repository;
@@ -169,10 +171,7 @@ public class GuestService {
     }
 
     private boolean isNotNullOrEmpty(String name) {
-        if (name == null || name.isBlank()) {
-            return false;
-        }
-        return true;
+        return name != null && !name.isBlank();
     }
 
     private boolean isPhoneNumber(String phone) {
@@ -196,7 +195,7 @@ public class GuestService {
     }
 
     private boolean containsOnlyCharacters(String input) {
-        return Pattern.matches("[a-zA-Z']+", input);
+        return Pattern.matches("[a-zA-Z'\\s]+", input);
     }
 
 }
